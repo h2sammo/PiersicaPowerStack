@@ -82,7 +82,7 @@
                 // Draw peach image for Power Peach blocks
                 if (currentPiece.isPowerPeach && peachImg.complete) {
                     const offset = (gridSize - peachImg.width) / 2; // Center the image
-                    ctx.drawImage(peachImg, (currentPiece.x + c) * gridSize + offset, (currentPiece.y + r) * gridSize + offset, peachImg.width * 0.1, peachImg.height);
+                    ctx.drawImage(peachImg, (currentPiece.x + c) * gridSize + offset, (currentPiece.y + r) * gridSize + offset, peachImg.width * 0.01, peachImg.height);
                 }
             }
         }
