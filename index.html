@@ -64,7 +64,11 @@
             ctx.fillRect(0, 0, canvas.width, 20 * (energy / 630));
         }
 
-       function drawPiece() {
+   function drawPiece() {
+    // Load the peach image
+    const peachImg = new Image();
+    peachImg.src = 'peach.png'; // Ensure this file is in the same directory
+
     ctx.fillStyle = currentPiece.isPowerPeach ? '#28A745' : '#ff5733'; // Green for Power Peach, red for others
     for (let r = 0; r < currentPiece.shape.length; r++) {
         for (let c = 0; c < currentPiece.shape[r].length; c++) {
@@ -74,21 +78,11 @@
                 // Draw the swirl (black inner part)
                 ctx.fillStyle = '#333';
                 ctx.fillRect((currentPiece.x + c) * gridSize + 2, (currentPiece.y + r) * gridSize + 2, gridSize - 5, gridSize - 5);
-                // Add PIERSICA text
-                ctx.fillStyle = '#FFFFFF';
-                const fontSize = Math.min(gridSize - 10, 12); // Dynamic font size, max 12px
-                ctx.font = `${fontSize}px Arial`;
-                const text = currentPiece.isPowerPeach ? 'Piersica' : 'PIERSICA';
-                const textWidth = ctx.measureText(text).width;
-                const xText = (currentPiece.x + c) * gridSize + (gridSize - textWidth) / 2; // Center horizontally
-                const yText = (currentPiece.y + r) * gridSize + (gridSize + fontSize) / 2 - 2; // Center vertically
-                ctx.fillText(text, xText, yText);
-                // Draw Power Peach circle if applicable
-                if (currentPiece.isPowerPeach) {
-                    ctx.beginPath();
-                    ctx.arc((currentPiece.x + c + 0.5) * gridSize, (currentPiece.y + r + 0.5) * gridSize, gridSize / 2 - 5, 0, Math.PI * 2);
-                    ctx.fillStyle = '#28A745';
-                    ctx.fill();
+
+                // Draw peach image for Power Peach blocks
+                if (currentPiece.isPowerPeach && peachImg.complete) {
+                    const offset = (gridSize - peachImg.width) / 2; // Center the image
+                    ctx.drawImage(peachImg, (currentPiece.x + c) * gridSize + offset, (currentPiece.y + r) * gridSize + offset, peachImg.width, peachImg.height);
                 }
             }
         }
