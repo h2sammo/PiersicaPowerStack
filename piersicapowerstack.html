@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Piersica Power Stack</title>
+    <style>
+        canvas { border: 2px solid #00AEEF; background: #f0f0f0; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial; }
+        #gameContainer { text-align: center; }
+        #score { font-size: 24px; margin-top: 10px; color: #00AEEF; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="300" height="600"></canvas>
+        <div id="score">Score: 0 | Energy: 0 Wh/kg</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gridSize = 30;
+        const cols = canvas.width / gridSize;
+        const rows = canvas.height / gridSize;
+        let board = Array(rows).fill().map(() => Array(cols).fill(0));
+        let score = 0;
+        let energy = 0;
+        let currentPiece;
+        let gameOver = false;
+
+        // Piersica battery and power peach pieces
+        const pieces = [
+            [[1, 1, 1], [0, 0, 1]], // L-shaped battery
+            [[1, 1, 1, 1]],         // I-shaped battery
+            [[1, 1], [1, 1]],       // Square battery
+            [[0, 1, 0], [1, 1, 1]]  // Power Peach (logo-inspired)
+        ];
+
+        function newPiece() {
+            const piece = pieces[Math.floor(Math.random() * pieces.length)];
+            return {
+                shape: piece,
+                x: Math.floor(cols / 2) - Math.floor(piece[0].length / 2),
+                y: 0,
+                isPowerPeach: piece === pieces[3]
+            };
+        }
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (board[r][c]) {
+                        ctx.fillStyle = '#00AEEF'; // Teal battery
+                        ctx.fillRect(c * gridSize, r * gridSize, gridSize - 1, gridSize - 1);
+                        ctx.fillStyle = '#333'; // Black swirl
+                        ctx.fillRect(c * gridSize + 5, r * gridSize + 5, gridSize - 10, gridSize - 10);
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.font = '10px Arial';
+                        ctx.fillText('PIERSICA', c * gridSize + 5, r * gridSize + 15);
+                    }
+                }
+            }
+            // Background peach city
+            ctx.fillStyle = '#00AEEF';
+            ctx.fillRect(0, 0, canvas.width, 20 * (energy / 630));
+        }
+
+        function drawPiece() {
+            ctx.fillStyle = currentPiece.isPowerPeach ? '#28A745' : '#ff5733'; // Green for Power Peach
+            for (let r = 0; r < currentPiece.shape.length; r++) {
+                for (let c = 0; c < currentPiece.shape[r].length; c++) {
+                    if (currentPiece.shape[r][c]) {
+                        ctx.fillRect((currentPiece.x + c) * gridSize, (currentPiece.y + r) * gridSize, gridSize - 1, gridSize - 1);
+                        if (currentPiece.isPowerPeach) {
+                            ctx.fillStyle = '#28A745';
+                            ctx.beginPath();
+                            ctx.arc((currentPiece.x + c + 0.5) * gridSize, (currentPiece.y + r + 0.5) * gridSize, gridSize / 2 - 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillText('Piersica', (currentPiece.x + c) * gridSize + 5, (currentPiece.y + r) * gridSize + 15);
+                        } else {
+                            ctx.fillStyle = '#333';
+                            ctx.fillRect((currentPiece.x + c) * gridSize + 5, (currentPiece.y + r) * gridSize + 5, gridSize - 10, gridSize - 10);
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillText('PIERSICA', (currentPiece.x + c) * gridSize + 5, (currentPiece.y + r) * gridSize + 15);
+                        }
+                    }
+                }
+            }
+        }
+
+        function collide() {
+            for (let r = 0; r < currentPiece.shape.length; r++) {
+                for (let c = 0; c < currentPiece.shape[r].length; c++) {
+                    if (!currentPiece.shape[r][c]) continue;
+                    let newX = currentPiece.x + c;
+                    let newY = currentPiece.y + r;
+                    if (newX < 0 || newX >= cols || newY >= rows || (newY >= 0 && board[newY][newX])) return true;
+                }
+            }
+            return false;
+        }
+
+        function merge() {
+            for (let r = 0; r < currentPiece.shape.length; r++) {
+                for (let c = 0; c < currentPiece.shape[r].length; c++) {
+                    if (currentPiece.shape[r][c]) {
+                        board[currentPiece.y + r][currentPiece.x + c] = 1;
+                    }
+                }
+            }
+        }
+
+        function clearLines() {
+            for (let r = rows - 1; r >= 0; r--) {
+                if (board[r].every(cell => cell)) {
+                    board.splice(r, 1);
+                    board.unshift(Array(cols).fill(0));
+                    score += 100;
+                    energy += currentPiece.isPowerPeach ? 126 : 63; // Double energy for Power Peach
+                    if (energy >= 630) {
+                        alert('Piersica Powered! Score: ' + score);
+                        energy = 0;
+                    }
+                }
+            }
+            document.getElementById('score').textContent = `Score: ${score} | Energy: ${Math.floor(energy)} Wh/kg`;
+        }
+
+        function drop() {
+            currentPiece.y++;
+            if (collide()) {
+                currentPiece.y--;
+                merge();
+                clearLines();
+                currentPiece = newPiece();
+                if (collide()) {
+                    alert(`Game Over! Score: ${score}\nPost your score in Teams at www.piersica.com!`);
+                    board = Array(rows).fill().map(() => Array(cols).fill(0));
+                    score = 0;
+                    energy = 0;
+                    gameOver = true;
+                }
+            }
+        }
+
+        function move(dir) {
+            currentPiece.x += dir;
+            if (collide()) currentPiece.x -= dir;
+        }
+
+        function rotate() {
+            const original = currentPiece.shape;
+            currentPiece.shape = original[0].map((_, i) => original.map(row => row[i]).reverse());
+            if (collide()) currentPiece.shape = original;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver) return;
+            if (e.key === 'ArrowLeft') move(-1);
+            if (e.key === 'ArrowRight') move(1);
+            if (e.key === 'ArrowDown') drop();
+            if (e.key === 'ArrowUp') rotate();
+        });
+
+        function gameLoop() {
+            if (!gameOver) {
+                drawBoard();
+                drawPiece();
+                setTimeout(() => requestAnimationFrame(gameLoop), 500);
+            }
+        }
+
+        currentPiece = newPiece();
+        setInterval(() => { if (!gameOver) drop(); }, 1000);
+        gameLoop();
+
+        // Restart after game over
+        document.addEventListener('keydown', e => {
+            if (gameOver && e.key === 'Enter') {
+                gameOver = false;
+                currentPiece = newPiece();
+                document.getElementById('score').textContent = `Score: 0 | Energy: 0 Wh/kg`;
+                gameLoop();
+            }
+        });
+    </script>
+</body>
+</html>
