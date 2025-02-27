@@ -64,29 +64,36 @@
             ctx.fillRect(0, 0, canvas.width, 20 * (energy / 630));
         }
 
-        function drawPiece() {
-            ctx.fillStyle = currentPiece.isPowerPeach ? '#28A745' : '#ff5733'; // Green for Power Peach
-            for (let r = 0; r < currentPiece.shape.length; r++) {
-                for (let c = 0; c < currentPiece.shape[r].length; c++) {
-                    if (currentPiece.shape[r][c]) {
-                        ctx.fillRect((currentPiece.x + c) * gridSize, (currentPiece.y + r) * gridSize, gridSize - 1, gridSize - 1);
-                        if (currentPiece.isPowerPeach) {
-                            ctx.fillStyle = '#28A745';
-                            ctx.beginPath();
-                            ctx.arc((currentPiece.x + c + 0.5) * gridSize, (currentPiece.y + r + 0.5) * gridSize, gridSize / 2 - 5, 0, Math.PI * 2);
-                            ctx.fill();
-                            ctx.fillStyle = '#FFFFFF';
-                            ctx.fillText('Piersica', (currentPiece.x + c) * gridSize + 5, (currentPiece.y + r) * gridSize + 15);
-                        } else {
-                            ctx.fillStyle = '#333';
-                            ctx.fillRect((currentPiece.x + c) * gridSize + 5, (currentPiece.y + r) * gridSize + 5, gridSize - 10, gridSize - 10);
-                            ctx.fillStyle = '#FFFFFF';
-                            ctx.fillText('PIERSICA', (currentPiece.x + c) * gridSize + 5, (currentPiece.y + r) * gridSize + 15);
-                        }
-                    }
+       function drawPiece() {
+    ctx.fillStyle = currentPiece.isPowerPeach ? '#28A745' : '#ff5733'; // Green for Power Peach, red for others
+    for (let r = 0; r < currentPiece.shape.length; r++) {
+        for (let c = 0; c < currentPiece.shape[r].length; c++) {
+            if (currentPiece.shape[r][c]) {
+                // Draw the block
+                ctx.fillRect((currentPiece.x + c) * gridSize, (currentPiece.y + r) * gridSize, gridSize - 1, gridSize - 1);
+                // Draw the swirl (black inner part)
+                ctx.fillStyle = '#333';
+                ctx.fillRect((currentPiece.x + c) * gridSize + 2, (currentPiece.y + r) * gridSize + 2, gridSize - 5, gridSize - 5);
+                // Add PIERSICA text
+                ctx.fillStyle = '#FFFFFF';
+                const fontSize = Math.min(gridSize - 10, 12); // Dynamic font size, max 12px
+                ctx.font = `${fontSize}px Arial`;
+                const text = currentPiece.isPowerPeach ? 'Piersica' : 'PIERSICA';
+                const textWidth = ctx.measureText(text).width;
+                const xText = (currentPiece.x + c) * gridSize + (gridSize - textWidth) / 2; // Center horizontally
+                const yText = (currentPiece.y + r) * gridSize + (gridSize + fontSize) / 2 - 2; // Center vertically
+                ctx.fillText(text, xText, yText);
+                // Draw Power Peach circle if applicable
+                if (currentPiece.isPowerPeach) {
+                    ctx.beginPath();
+                    ctx.arc((currentPiece.x + c + 0.5) * gridSize, (currentPiece.y + r + 0.5) * gridSize, gridSize / 2 - 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#28A745';
+                    ctx.fill();
                 }
             }
         }
+    }
+}
 
         function collide() {
             for (let r = 0; r < currentPiece.shape.length; r++) {
